@@ -1,0 +1,63 @@
+
+# ===== Node / npm =====
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.tsbuildinfo
+
+# ===== Next.js =====
+apps/web/.next/
+apps/web/out/
+apps/web/.vercel/
+apps/web/.turbo/
+
+# ===== Build outputs =====
+dist/
+build/
+*.js.map
+
+# ===== Environment variables =====
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# ===== Database =====
+*.sqlite
+*.sqlite3
+prisma/migrations/dev/
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ===== Editor =====
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# ===== Claude Code (AI assistant — not a human contributor) =====
+.claude/
+CLAUDE.md
+.qodo/
+
+# ===== Logs =====
+logs/
+*.log
+
+# ===== Test outputs =====
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# ===== Misc =====
+*.tgz
+.cache/
