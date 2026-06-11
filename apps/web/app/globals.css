@@ -1,0 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --abyss: #06121F;
+  --abyss-2: #0A1B2E;
+  --fog: #9FB4C8;
+  --white: #EFF6FB;
+  --sonar: #2BD9C2;
+  --sonar-dim: rgba(43, 217, 194, 0.14);
+  --coral: #FF5C45;
+  --amber: #F2B544;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--abyss);
+  color: var(--white);
+  font-family: 'IBM Plex Sans', sans-serif;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--sonar);
+  color: var(--abyss);
+}
+
+:focus-visible {
+  outline: 2px solid var(--sonar);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
