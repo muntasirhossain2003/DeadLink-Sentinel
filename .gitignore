@@ -58,6 +58,10 @@ coverage/
 playwright-report/
 test-results/
 
+# ===== Local design references (keep on disk, never push) =====
+deadlink-sentinel-landing.html
+*.html
+
 # ===== Misc =====
 *.tgz
 .cache/
