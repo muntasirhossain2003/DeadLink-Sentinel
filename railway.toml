@@ -1,0 +1,42 @@
+[build]
+builder = "nixpacks"
+
+# ---------------------------------------------------------------------------
+# Web service
+# ---------------------------------------------------------------------------
+[[services]]
+name = "web"
+source = "apps/web"
+
+[services.build]
+buildCommand = "npm run build --workspace=apps/web"
+
+[services.deploy]
+startCommand = "npm run start --workspace=apps/web"
+healthcheckPath = "/"
+healthcheckTimeout = 30
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+[[services.variables]]
+name = "NODE_ENV"
+value = "production"
+
+# ---------------------------------------------------------------------------
+# Worker service
+# ---------------------------------------------------------------------------
+[[services]]
+name = "worker"
+source = "apps/worker"
+
+[services.build]
+buildCommand = "npm run build --workspace=apps/worker"
+
+[services.deploy]
+startCommand = "node apps/worker/dist/index.js"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+[[services.variables]]
+name = "NODE_ENV"
+value = "production"
