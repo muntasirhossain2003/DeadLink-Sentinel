@@ -3,7 +3,7 @@ import { DemoScanSchema, type ScanJobData, DEFAULT_SCAN_OPTIONS } from '@deadlin
 import { prisma } from '@deadlink-sentinel/db';
 import { assertNotPrivate } from '@/lib/ssrf-guard';
 import { redis } from '@/lib/redis';
-import { Queue } from 'bullmq';
+import { getScanQueue } from '@/lib/queue';
 
 // Demo scan — no auth required but rate-limited to 1 scan per IP per day.
 // The result is not persisted to a user account.
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     isDemo: true,
   };
 
-  const queue = new Queue<ScanJobData>('scans', { connection: redis });
+  const queue = getScanQueue();
   await queue.add('crawl', jobData, { attempts: 1 });
   await queue.close();
 
