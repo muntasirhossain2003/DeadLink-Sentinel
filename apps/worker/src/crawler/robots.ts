@@ -1,6 +1,18 @@
-import robotsParser from 'robots-parser';
+import robotsParserImport from 'robots-parser';
 import { fetchWithTimeout } from './fetcher.js';
 import { log } from '../logger.js';
+
+// robots-parser is CJS with a d.ts that declares `export default`; under
+// NodeNext TS types the import as a namespace while at runtime the default
+// import IS the function. Cast to the real callable shape once, here.
+type RobotsParserFn = (
+  url: string,
+  robotstxt: string,
+) => {
+  isAllowed(url: string, ua?: string): boolean | undefined;
+  getCrawlDelay(ua?: string): number | undefined;
+};
+const robotsParser = robotsParserImport as unknown as RobotsParserFn;
 
 export type RobotsRules = {
   isAllowed: (url: string) => boolean;

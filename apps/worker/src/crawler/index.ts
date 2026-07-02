@@ -28,13 +28,13 @@ export async function runCrawl(job: ScanJobData, redis: Redis): Promise<void> {
   await publish({ type: 'CRAWL_STARTED', scanId, rootUrl });
 
   try {
-    await crawl({ scanId, rootUrl, options, isDemo, redis, publish });
+    const summary = await crawl({ ...job, redis, publish });
 
     await publish({
       type: 'SCAN_COMPLETED',
       scanId,
-      healthScore: (await prisma.scan.findUnique({ where: { id: scanId }, select: { healthScore: true } }))?.healthScore ?? 0,
-      pagesCrawled: (await prisma.scan.findUnique({ where: { id: scanId }, select: { pagesCrawled: true } }))?.pagesCrawled ?? 0,
+      healthScore: summary.healthScore,
+      pagesCrawled: summary.pagesCrawled,
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -58,9 +58,11 @@ async function crawl({
   scanId,
   rootUrl,
   options,
-  redis,
   publish,
-}: ScanJobData & { redis: Redis; publish: (e: ScanProgressEvent) => Promise<number> }) {
+}: ScanJobData & {
+  redis: Redis;
+  publish: (e: ScanProgressEvent) => Promise<number>;
+}): Promise<{ healthScore: number; pagesCrawled: number }> {
   const origin = new URL(rootUrl).origin;
   const robots = await fetchRobots(rootUrl);
 
@@ -165,21 +167,16 @@ async function crawl({
           sourcePageId: pageRecord.id,
           targetUrl: link.href,
           isExternal,
-          result: classification.kind === 'BROKEN_ANCHOR' ? 'BROKEN_ANCHOR'
-                : classification.kind === 'REDIRECT' ? 'REDIRECT'
-                : classification.kind === 'BROKEN' ? 'BROKEN'
-                : 'OK',
+          result: classification.kind,
           httpStatus: classification.httpStatus,
-          redirectChain:
-            classification.kind === 'REDIRECT'
-              ? classification.redirectChain
-              : undefined,
-          errorDetail:
-            classification.kind === 'BROKEN'
-              ? classification.errorDetail
-              : classification.kind === 'BROKEN_ANCHOR'
-              ? `missing #${classification.fragment}`
-              : undefined,
+          ...(classification.kind === 'REDIRECT'
+            ? { redirectChain: classification.redirectChain }
+            : {}),
+          ...(classification.kind === 'BROKEN'
+            ? { errorDetail: classification.errorDetail }
+            : classification.kind === 'BROKEN_ANCHOR'
+              ? { errorDetail: `missing #${classification.fragment}` }
+              : {}),
         },
       });
 
@@ -210,6 +207,7 @@ async function crawl({
   });
 
   log.info({ scanId, pagesCrawled, healthScore }, 'crawl completed');
+  return { healthScore, pagesCrawled };
 }
 
 function sleep(ms: number) {
