@@ -1,10 +1,10 @@
-import NextAuth from 'next-auth';
+import NextAuth, { type NextAuthResult } from 'next-auth';
 import GitHub from 'next-auth/providers/github';
 import Resend from 'next-auth/providers/resend';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@deadlink-sentinel/db';
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+const nextAuth = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [
     GitHub({
@@ -31,3 +31,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     error: '/sign-in',
   },
 });
+
+// Explicit annotations work around next-auth v5's non-portable inferred
+// types (TS2742) in a monorepo.
+export const handlers: NextAuthResult['handlers'] = nextAuth.handlers;
+export const auth: NextAuthResult['auth'] = nextAuth.auth;
+export const signIn: NextAuthResult['signIn'] = nextAuth.signIn;
+export const signOut: NextAuthResult['signOut'] = nextAuth.signOut;
