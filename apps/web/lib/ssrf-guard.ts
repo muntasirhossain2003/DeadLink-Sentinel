@@ -1,4 +1,3 @@
-import { createConnection } from 'net';
 import { promises as dns } from 'dns';
 
 // SSRF prevention — resolve the hostname and reject any private/reserved IP

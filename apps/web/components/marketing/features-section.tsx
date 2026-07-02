@@ -53,7 +53,7 @@ export function FeaturesSection() {
   return (
     <section className="mx-auto max-w-[1140px] px-8 pt-[130px]">
       <div className="mb-[70px]">
-        <p className="mb-[18px] font-mono text-xs uppercase tracking-[.26em] text-sonar">// what the sweep finds</p>
+        <p className="mb-[18px] font-mono text-xs uppercase tracking-[.26em] text-sonar">{'// what the sweep finds'}</p>
         <h2 className="max-w-[18ch] font-display text-[clamp(30px,4.4vw,54px)] font-extrabold leading-[1.04] tracking-[-0.03em]">
           Four kinds of decay. One pass.
         </h2>
@@ -63,7 +63,7 @@ export function FeaturesSection() {
       </div>
 
       <div className="grid gap-[18px]">
-        {features.map((f, i) => (
+        {features.map((f) => (
           <div
             key={f.type}
             className="grid grid-cols-[90px_1fr_1fr] items-center gap-[30px] rounded-[18px] border border-snow/[.09] bg-gradient-to-b from-abyss-2/55 to-abyss-2/25 px-9 py-[34px] backdrop-blur-[10px] transition-all duration-300 hover:-translate-y-[3px] hover:border-sonar/45 hover:shadow-[0_0_60px_rgba(43,217,194,.08)]"

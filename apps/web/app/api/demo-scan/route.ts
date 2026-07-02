@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     request.headers.get('x-real-ip') ??
     'unknown';
 
-  const body = await request.json();
+  const body: unknown = await request.json();
   const parsed = DemoScanSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });

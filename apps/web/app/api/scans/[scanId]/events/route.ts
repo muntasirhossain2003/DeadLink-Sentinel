@@ -50,7 +50,8 @@ export async function GET(
     async start(controller) {
       const enc = new TextEncoder();
 
-      await subscriber.subscribe(channel, (message) => {
+      await subscriber.subscribe(channel);
+      subscriber.on('message', (_channel: string, message: string) => {
         try {
           controller.enqueue(enc.encode(`data: ${message}\n\n`));
         } catch {

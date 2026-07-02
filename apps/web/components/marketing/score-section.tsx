@@ -75,7 +75,7 @@ export function ScoreSection() {
   return (
     <section className="mx-auto max-w-[1140px] px-8 pt-[130px]">
       <div className="mb-[70px]">
-        <p className="mb-[18px] font-mono text-xs uppercase tracking-[.26em] text-sonar">// the health score</p>
+        <p className="mb-[18px] font-mono text-xs uppercase tracking-[.26em] text-sonar">{'// the health score'}</p>
         <h2 className="max-w-[18ch] font-display text-[clamp(30px,4.4vw,54px)] font-extrabold leading-[1.04] tracking-[-0.03em]">
           One number. The whole story.
         </h2>
