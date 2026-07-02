@@ -47,16 +47,11 @@ export type LinkClassification =
   | LinkResultBrokenAnchor;
 
 // ---------------------------------------------------------------------------
-// Scan options — what the user configures before starting a crawl
+// Scan options — the canonical type lives in schemas.ts (Zod-inferred),
+// keeping runtime validation and the static type from ever diverging.
 // ---------------------------------------------------------------------------
 
-export type ScanOptions = {
-  maxPages: 25 | 100 | 250;
-  maxDepth: 1 | 2 | 3 | 4 | 5;
-  includePatterns: string[];
-  excludePatterns: string[];
-  checkExternalLinks: boolean;
-};
+import type { ScanOptions } from './schemas.js';
 
 export const DEFAULT_SCAN_OPTIONS: ScanOptions = {
   maxPages: 100,
