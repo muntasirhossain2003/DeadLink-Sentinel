@@ -5,8 +5,10 @@
   "type": "module",
   "main": "./src/index.ts",
   "scripts": {
+    "predev": "npm run build --workspace=@deadlink-sentinel/shared --workspace=@deadlink-sentinel/db",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
+    "prebuild": "npm run build --workspace=@deadlink-sentinel/shared --workspace=@deadlink-sentinel/db",
     "build": "tsc",
     "typecheck": "tsc --noEmit"
   },

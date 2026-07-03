@@ -25,6 +25,9 @@ jobs:
       - name: Generate Prisma client
         run: npm run db:generate
 
+      - name: Build shared packages
+        run: npm run build --workspace=packages/shared --workspace=packages/db
+
       - name: Typecheck (all workspaces)
         run: npm run typecheck --workspaces --if-present
 

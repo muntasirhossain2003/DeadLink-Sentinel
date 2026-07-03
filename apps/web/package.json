@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "npm run build --workspace=@deadlink-sentinel/shared --workspace=@deadlink-sentinel/db",
     "dev": "next dev",
+    "prebuild": "npm run build --workspace=@deadlink-sentinel/shared --workspace=@deadlink-sentinel/db",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
