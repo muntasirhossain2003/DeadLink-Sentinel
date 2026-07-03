@@ -56,34 +56,62 @@ export function DemoScanRunner({ url }: Props) {
         return;
       }
 
-      const es = new EventSource(`/api/scans/${scanId}/events`);
-      esRef.current = es;
+      // The stream can drop mid-scan (the server enforces a max function
+      // duration far shorter than a large scan can take) — reconnect rather
+      // than treating a drop as final. ALREADY_DONE on the server covers the
+      // case where the scan actually finished while we were disconnected.
+      const MAX_RETRIES = 5;
+      let retries = 0;
+      let cancelled = false;
 
-      es.onmessage = (e) => {
-        const event = JSON.parse(e.data as string) as ScanProgressEvent;
+      function connect() {
+        const es = new EventSource(`/api/scans/${scanId}/events`);
+        esRef.current = es;
 
-        if (event.type === 'PAGE_CRAWLED') {
-          setProgress((prev) => [`Crawled: ${event.url}`, ...prev.slice(0, 29)]);
-        } else if (event.type === 'SCAN_COMPLETED') {
-          setResult({ healthScore: event.healthScore, pagesCrawled: event.pagesCrawled });
-          setPhase('done');
+        es.onmessage = (e) => {
+          retries = 0;
+          const event = JSON.parse(e.data as string) as ScanProgressEvent;
+
+          if (event.type === 'PAGE_CRAWLED') {
+            setProgress((prev) => [`Crawled: ${event.url}`, ...prev.slice(0, 29)]);
+          } else if (event.type === 'SCAN_COMPLETED') {
+            setResult({ healthScore: event.healthScore, pagesCrawled: event.pagesCrawled });
+            setPhase('done');
+            es.close();
+          } else if (event.type === 'SCAN_FAILED') {
+            setErrorMsg(event.errorMessage);
+            setPhase('error');
+            es.close();
+          }
+        };
+
+        es.onerror = () => {
           es.close();
-        } else if (event.type === 'SCAN_FAILED') {
-          setErrorMsg(event.errorMessage);
-          setPhase('error');
-          es.close();
-        }
-      };
+          if (cancelled) return;
+          if (retries >= MAX_RETRIES) {
+            setErrorMsg('Connection lost. Try again.');
+            setPhase('error');
+            return;
+          }
+          retries++;
+          setTimeout(connect, 1000 * retries);
+        };
+      }
 
-      es.onerror = () => {
-        setErrorMsg('Connection lost. Try again.');
-        setPhase('error');
-        es.close();
+      connect();
+      return () => {
+        cancelled = true;
       };
     }
 
-    void kickoff();
-    return () => esRef.current?.close();
+    let cleanupReconnect: (() => void) | undefined;
+    void kickoff().then((cleanup) => {
+      cleanupReconnect = cleanup;
+    });
+    return () => {
+      cleanupReconnect?.();
+      esRef.current?.close();
+    };
   }, [url]);
 
   if (!url) {

@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { redis, scanProgressChannel } from '@/lib/redis';
 import { prisma } from '@deadlink-sentinel/db';
+import type { ScanProgressEvent } from '@deadlink-sentinel/shared';
 
 // Server-Sent Events endpoint.
 // The worker publishes ScanProgressEvent JSON to Redis pub/sub;
@@ -9,15 +10,30 @@ import { prisma } from '@deadlink-sentinel/db';
 // Chosen over WebSockets because progress is one-directional and SSE works
 // through HTTP/2 proxies without a protocol upgrade.
 
+// A scan can run longer than this stream stays open (serverless functions
+// have a hard execution ceiling — 60s is the max the Hobby plan allows).
+// The client reconnects on drop; ALREADY_DONE below covers the case where
+// the scan finished while disconnected.
+export const maxDuration = 60;
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { scanId: string } },
 ) {
+  const scanSelect = {
+    id: true,
+    status: true,
+    healthScore: true,
+    pagesCrawled: true,
+    errorMessage: true,
+  } as const;
+
   // Demo scans have no owner and are readable by anyone holding the scanId
   // (the id itself is the secret — same trust model as an unguessable share link).
   const demoScan = await prisma.scan.findFirst({
     where: { id: params.scanId, siteId: 'demo' },
-    select: { id: true, status: true },
+    select: scanSelect,
   });
 
   let scan = demoScan;
@@ -34,7 +50,7 @@ export async function GET(
         id: params.scanId,
         site: { userId: session.user.id },
       },
-      select: { id: true, status: true },
+      select: scanSelect,
     });
   }
 
@@ -42,11 +58,27 @@ export async function GET(
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  // Already done — no need to hold a connection
+  // Already done (e.g. the client reconnected after the scan finished, or
+  // finished while the previous connection was dropped) — replay the
+  // terminal event once instead of holding a connection open.
   if (scan.status === 'COMPLETED' || scan.status === 'FAILED' || scan.status === 'CANCELLED') {
+    const finalEvent: ScanProgressEvent =
+      scan.status === 'COMPLETED'
+        ? {
+            type: 'SCAN_COMPLETED',
+            scanId: scan.id,
+            healthScore: scan.healthScore ?? 0,
+            pagesCrawled: scan.pagesCrawled,
+          }
+        : {
+            type: 'SCAN_FAILED',
+            scanId: scan.id,
+            errorMessage: scan.errorMessage ?? 'Scan was cancelled.',
+          };
+
     const stream = new ReadableStream({
       start(controller) {
-        controller.enqueue(`data: ${JSON.stringify({ type: 'ALREADY_DONE', status: scan.status })}\n\n`);
+        controller.enqueue(`data: ${JSON.stringify(finalEvent)}\n\n`);
         controller.close();
       },
     });
