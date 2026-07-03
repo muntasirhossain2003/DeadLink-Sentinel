@@ -13,19 +13,30 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { scanId: string } },
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
-
-  // Verify the scan belongs to the requesting user
-  const scan = await prisma.scan.findFirst({
-    where: {
-      id: params.scanId,
-      site: { userId: session.user.id },
-    },
+  // Demo scans have no owner and are readable by anyone holding the scanId
+  // (the id itself is the secret — same trust model as an unguessable share link).
+  const demoScan = await prisma.scan.findFirst({
+    where: { id: params.scanId, siteId: 'demo' },
     select: { id: true, status: true },
   });
+
+  let scan = demoScan;
+
+  if (!scan) {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+    }
+
+    // Verify the scan belongs to the requesting user
+    scan = await prisma.scan.findFirst({
+      where: {
+        id: params.scanId,
+        site: { userId: session.user.id },
+      },
+      select: { id: true, status: true },
+    });
+  }
 
   if (!scan) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });

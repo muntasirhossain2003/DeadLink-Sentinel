@@ -27,22 +27,34 @@ export function DemoScanRunner({ url }: Props) {
     async function kickoff() {
       setPhase('scanning');
 
-      // POST to a demo-scan Server Action via a simple fetch wrapper.
-      // The route validates URL, enforces IP rate-limit, and returns a scanId.
-      const res = await fetch('/api/demo-scan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
-      });
+      let scanId: string;
+      try {
+        // POST to a demo-scan Server Action via a simple fetch wrapper.
+        // The route validates URL, enforces IP rate-limit, and returns a scanId.
+        const res = await fetch('/api/demo-scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url }),
+        });
 
-      if (!res.ok) {
-        const { error } = await res.json() as { error: string };
-        setErrorMsg(error ?? 'Could not start scan');
+        if (!res.ok) {
+          // Error responses are JSON, but an unhandled server exception (500)
+          // can render as an HTML page instead — guard the parse either way.
+          const message: string = await res
+            .json()
+            .then((body: { error?: string }) => body.error ?? 'Could not start scan')
+            .catch(() => 'Could not start scan');
+          setErrorMsg(message);
+          setPhase('error');
+          return;
+        }
+
+        ({ scanId } = await res.json() as { scanId: string });
+      } catch {
+        setErrorMsg('Could not reach the server. Try again.');
         setPhase('error');
         return;
       }
-
-      const { scanId } = await res.json() as { scanId: string };
 
       const es = new EventSource(`/api/scans/${scanId}/events`);
       esRef.current = es;
