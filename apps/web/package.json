@@ -10,17 +10,17 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.4.2",
     "@deadlink-sentinel/db": "*",
     "@deadlink-sentinel/shared": "*",
-    "next": "14.2.29",
+    "bullmq": "^5.12.12",
+    "ioredis": "^5.4.1",
+    "next": "^14.2.35",
+    "next-auth": "^5.0.0-beta.20",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "next-auth": "^5.0.0-beta.20",
-    "zod": "^3.23.8",
     "recharts": "^2.12.7",
-    "ioredis": "^5.4.1",
-    "bullmq": "^5.12.12",
-    "@auth/prisma-adapter": "^2.4.2"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20.14.15",
